@@ -8,5 +8,5 @@ from ..data_object import VisualMedia
 
 class SearchResult(BaseModel):
     success: bool = Field(alias="Response")
-    search: Optional[list[VisualMedia]] = Field(alias="Search")
-    error: Optional[str] = Field(alias="Error")
+    search: Optional[list[VisualMedia]] = Field(alias="Search", default=None)
+    error: Optional[str] = Field(alias="Error", default=None)

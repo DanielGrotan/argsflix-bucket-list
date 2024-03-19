@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Rating(BaseModel):
-    source: str
-    value: str
+    source: str = Field(alias="Source")
+    value: str = Field(alias="Value")

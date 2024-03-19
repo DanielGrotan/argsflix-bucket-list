@@ -1,18 +1,27 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field, validator
-
 from ..data_object import DetailedVisualMedia
 
 
-class DetailedSearchResult(BaseModel):
-    success: bool = Field(alias="Response")
-    data: Optional[DetailedVisualMedia] = None
-    error: Optional[str] = Field(alias="Error")
+class DetailedSearchResult:
+    def __init__(self, api_response: dict) -> None:
+        self.success = api_response.get("Response") == "True"
 
-    @validator("data", always=True)
-    def validate_data(cls, _, values):
-        if values["success"]:
-            return DetailedVisualMedia(**values)
+        if not self.success:
+            self.data = None
+            self.error = api_response.get("Error")
 
-        return None
+            assert self.error is not None, "Error message not found in response"
+            return
+
+        self.data = DetailedVisualMedia(**api_response)
+        self.error = None
+
+    def __str__(self) -> str:
+        if self.success:
+            return f"Success: {self.data}"
+        else:
+            return f"Error: {self.error}"
+
+    def __repr__(self) -> str:
+        return f"DetailedSearchResult(success={self.success}, data={self.data}, error={self.error})"
