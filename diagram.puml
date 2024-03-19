@@ -1,0 +1,82 @@
+@startuml diagram
+
+skinparam linetype ortho
+
+class OmdbAPI {
+    -api_key: str
+    --
+    +search(query: str) -> SearchResult
+    +get_details(imdb_id: str) -> SearchResult
+}
+
+class ApiResponse {
+    +success: bool
+    +data: Any | None
+    +error: str | None
+}
+
+class SearchResult extends ApiResponse {
+    +data: list[VisualMedia] | None
+}
+
+class DetailedSearchResult extends ApiResponse {
+    +data: DetailedVisualMedia | None
+}
+
+class UserInterface {
+    -api: OmdbAPI
+    --
+    +run()
+}
+
+class CLI extends UserInterface {}
+
+class GUI extends UserInterface {}
+
+class VisualMedia {
+    +title: str
+    +year: str
+    +imdb_id: str
+    +poster: str
+    +type: str
+}
+
+class DetailedVisualMedia {
+    +title: str
+    +year: str
+    +poster: str
+    +type: str
+    +rated: str
+    +released: str
+    +runtime: str
+    +genre: str
+    +director: str
+    +writer: str
+    +actors: str
+    +plot: str
+    +language: str
+    +country: str
+    +awards: str
+    +ratings: list[Rating]
+    +metascore: str
+    +imdb_rating: str
+    +imdb_votes: str
+}
+
+class DetailedMovie extends DetailedVisualMedia {
+    +dvd: str
+    +box_office: str
+    +production: str
+    +website: str
+}
+
+class DetailedSeries extends DetailedVisualMedia {
+    +total_seasons: str
+}
+
+class Rating {
+    source: str
+    value: str
+}
+
+@enduml
