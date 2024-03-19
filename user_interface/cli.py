@@ -52,13 +52,12 @@ class CLI(UserInterface, Cmd):
     def do_add(self, arg) -> None:
         """Add a movie to the bucket list"""
 
-        print("Adding " + arg + "...")
-
-        # check if id is valid
         result = self.api.get_details(arg)
         if not result.success or result.data is None:
             print("Invalid IMDB ID.")
             return
+
+        print("Adding " + arg + "...")
 
         if any(movie["imdb_id"] == arg for movie in self.bucket_list.view()):
             print("Movie already in bucket list.")
