@@ -1,5 +1,4 @@
 from cmd import Cmd
-from typing import override
 
 from .user_interface import UserInterface
 
@@ -8,14 +7,25 @@ class CLI(UserInterface, Cmd):
     intro = (
         "Welcome to the OMDB command line interface. Type help or ? to list commands.\n"
     )
+    prompt = ">>> "
 
     def __init__(self, api, bucket_list) -> None:
         super().__init__(api, bucket_list)
         Cmd.__init__(self)
 
-    @override
+        self.previous_results = []
+
+    def postcmd(self, stop: bool, line) -> bool:
+        print()
+        return stop
+
     def run(self) -> None:
         self.cmdloop()
+
+    def do_clear(self, arg: str) -> None:
+        """Clear the screen."""
+
+        print("\033c", end="")
 
     def do_search(self, arg: str) -> None:
         """List results for a given query."""
@@ -24,20 +34,32 @@ class CLI(UserInterface, Cmd):
         result = self.api.search(arg)
 
         if result.success and result.search is not None:
-            print("Search results:")
+            self.previous_results = result.search
 
-            for media in result.search:
-                print(f"{media.title} ({media.year}) - {media.imdb_id}")
+            for i, media in enumerate(result.search, 1):
+                print(f"{i}. {media.title} ({media.year}) - {media.imdb_id}")
 
             return
+
+        self.previous_results = []
 
         print(result.error)
 
     def do_get_details(self, arg: str) -> None:
-        """Get details for a given IMDB ID."""
+        """Get details for search result at given index."""
+
+        try:
+            index = int(arg)
+        except ValueError:
+            print("Invalid input.")
+            return
+
+        if index < 1 or index > len(self.previous_results):
+            print("Invalid index.")
+            return
 
         print("Getting details for " + arg + "...")
-        result = self.api.get_details(arg)
+        result = self.api.get_details(self.previous_results[index - 1].imdb_id)
 
         if result.success and result.data is not None:
             data = result.data
@@ -50,43 +72,96 @@ class CLI(UserInterface, Cmd):
         print(result.error)
 
     def do_add(self, arg) -> None:
-        """Add a movie to the bucket list"""
+        """Add a movie from the search results to the bucket list"""
 
-        result = self.api.get_details(arg)
-        if not result.success or result.data is None:
-            print("Invalid IMDB ID.")
+        try:
+            index = int(arg)
+        except ValueError:
+            print("Invalid input.")
             return
 
-        print("Adding " + arg + "...")
+        if index < 1 or index > len(self.previous_results):
+            print("Invalid index.")
+            return
 
-        if any(movie["imdb_id"] == arg for movie in self.bucket_list.view()):
+        result = self.previous_results[index - 1]
+
+        if any(movie["imdb_id"] == result.imdb_id for movie in self.bucket_list.view()):
             print("Movie already in bucket list.")
             return
 
         self.bucket_list.add(
-            {"title": result.data.title, "imdb_id": arg, "seen": False}
+            {"title": result.title, "imdb_id": result.imdb_id, "seen": False}
         )
-        print("Added to bucket list.")
+        print(
+            f"Added {result.title} ({result.year}) - {result.imdb_id} to bucket list."
+        )
 
     def do_list(self, arg) -> None:
         """List all movies in the bucket list"""
 
-        print("Listing all movies...")
-        for movie in self.bucket_list.view():
-            print(f"{movie['title']} ({movie['imdb_id']}) - Seen: {movie['seen']}")
+        for i, movie in enumerate(self.bucket_list.view(), 1):
+            print(f"{i}. {movie['title']} ({movie['imdb_id']}) - Seen: {movie['seen']}")
 
     def do_remove(self, arg) -> None:
         """Remove a movie from the bucket list"""
 
-        print("Removing " + arg + "...")
+        try:
+            index = int(arg)
+        except ValueError:
+            print("Invalid input.")
+            return
 
-        for movie in self.bucket_list.view():
-            if movie["imdb_id"] == arg:
-                self.bucket_list.remove(movie)
-                print("Removed from bucket list.")
-                return
+        bucket_list = self.bucket_list.view()
 
-        print("Movie not found in bucket list.")
+        if index < 1 or index > len(bucket_list):
+            print("Invalid index.")
+            return
+
+        media = bucket_list[index - 1]
+
+        self.bucket_list.remove(index - 1)
+        print(f"Removed {media['title']} ({media['imdb_id']}) from bucket list.")
+
+    def do_mark_seen(self, arg) -> None:
+        """Mark a movie as seen in the bucket list"""
+
+        try:
+            index = int(arg)
+        except ValueError:
+            print("Invalid input.")
+            return
+
+        bucket_list = self.bucket_list.view()
+
+        if index < 1 or index > len(bucket_list):
+            print("Invalid index.")
+            return
+
+        media = bucket_list[index - 1]
+
+        self.bucket_list.update(index - 1, {"seen": True})
+        print(f"Marked {media['title']} ({media['imdb_id']}) as seen.")
+
+    def do_unmark_seen(self, arg) -> None:
+        """Mark a movie as unseen in the bucket list"""
+
+        try:
+            index = int(arg)
+        except ValueError:
+            print("Invalid input.")
+            return
+
+        bucket_list = self.bucket_list.view()
+
+        if index < 1 or index > len(bucket_list):
+            print("Invalid index.")
+            return
+
+        media = bucket_list[index - 1]
+
+        self.bucket_list.update(index - 1, {"seen": False})
+        print(f"Marked {media['title']} ({media['imdb_id']}) as unseen.")
 
     def do_save(self, arg) -> None:
         """Save the bucket list to disk."""

@@ -26,10 +26,15 @@ class BucketList:
 
         return self.bucket_list.copy()
 
-    def remove(self, item: dict) -> None:
+    def remove(self, index: int) -> None:
         """Remove an item from the bucket list."""
 
-        self.bucket_list.remove(item)
+        self.bucket_list.pop(index)
+
+    def update(self, index: int, values: dict) -> None:
+        """Update an item in the bucket list."""
+
+        self.bucket_list[index].update(values)
 
     def save(self) -> None:
         """Save the bucket list to disk."""

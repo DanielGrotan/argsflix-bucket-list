@@ -1,6 +1,6 @@
 from typing import Optional
 
-from ..data_object import DetailedVisualMedia
+from ..data_object import DetailedMovie, DetailedSeries, DetailedVisualMedia
 
 
 class DetailedSearchResult:
@@ -14,7 +14,15 @@ class DetailedSearchResult:
             assert self.error is not None, "Error message not found in response"
             return
 
-        self.data = DetailedVisualMedia(**api_response)
+        media_type = api_response.get("Type")
+
+        if media_type == "movie":
+            self.data = DetailedMovie(**api_response)
+        elif media_type == "series":
+            self.data = DetailedSeries(**api_response)
+        else:
+            self.data = DetailedVisualMedia(**api_response)
+
         self.error = None
 
     def __str__(self) -> str:

@@ -1,6 +1,8 @@
 import copy
+import io
 
 import requests
+from PIL import Image
 
 from .api_response import DetailedSearchResult, SearchResult
 
