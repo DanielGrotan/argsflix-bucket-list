@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Literal
 
 
 class BucketList:
@@ -35,6 +36,13 @@ class BucketList:
         """Update an item in the bucket list."""
 
         self.bucket_list[index].update(values)
+
+    def sort_copy(self, field: str, order: Literal["asc", "desc"]) -> list[dict]:
+        """Sort the bucket list by field."""
+
+        return sorted(
+            self.bucket_list, key=lambda x: x.get(field) or 0, reverse=order == "desc"
+        )
 
     def save(self) -> None:
         """Save the bucket list to disk."""

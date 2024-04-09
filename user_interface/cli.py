@@ -15,6 +15,10 @@ class CLI(UserInterface, Cmd):
 
         self.previous_results = []
 
+    def print_bucket_list(self, bucket_list: list[dict]) -> None:
+        for i, movie in enumerate(bucket_list, 1):
+            print(f"{i}. {movie['title']} ({movie['imdb_id']}) - Seen: {movie['seen']}")
+
     def postcmd(self, stop: bool, line) -> bool:
         print()
         return stop
@@ -23,12 +27,12 @@ class CLI(UserInterface, Cmd):
         self.cmdloop()
 
     def do_clear(self, arg: str) -> None:
-        """Clear the screen."""
+        """Clear the screen. Usage clear"""
 
         print("\033c", end="")
 
     def do_search(self, arg: str) -> None:
-        """List results for a given query."""
+        """List results for a given query. Usage search <query>"""
 
         print("Searching for " + arg + "...")
         result = self.api.search(arg)
@@ -36,8 +40,7 @@ class CLI(UserInterface, Cmd):
         if result.success and result.search is not None:
             self.previous_results = result.search
 
-            for i, media in enumerate(result.search, 1):
-                print(f"{i}. {media.title} ({media.year}) - {media.imdb_id}")
+            self.print_bucket_list(self.bucket_list.view())
 
             return
 
@@ -46,7 +49,7 @@ class CLI(UserInterface, Cmd):
         print(result.error)
 
     def do_get_details(self, arg: str) -> None:
-        """Get details for search result at given index."""
+        """Get details for search result at given index. Usage get_details <index>"""
 
         try:
             index = int(arg)
@@ -72,7 +75,7 @@ class CLI(UserInterface, Cmd):
         print(result.error)
 
     def do_add(self, arg) -> None:
-        """Add a movie from the search results to the bucket list"""
+        """Add a movie from the search results to the bucket list. Usage add <index>"""
 
         try:
             index = int(arg)
@@ -98,13 +101,13 @@ class CLI(UserInterface, Cmd):
         )
 
     def do_list(self, arg) -> None:
-        """List all movies in the bucket list"""
+        """List all movies in the bucket list. Usage list"""
 
         for i, movie in enumerate(self.bucket_list.view(), 1):
             print(f"{i}. {movie['title']} ({movie['imdb_id']}) - Seen: {movie['seen']}")
 
     def do_remove(self, arg) -> None:
-        """Remove a movie from the bucket list"""
+        """Remove a movie from the bucket list. Usage remove <index>"""
 
         try:
             index = int(arg)
@@ -124,7 +127,7 @@ class CLI(UserInterface, Cmd):
         print(f"Removed {media['title']} ({media['imdb_id']}) from bucket list.")
 
     def do_mark_seen(self, arg) -> None:
-        """Mark a movie as seen in the bucket list"""
+        """Mark a movie as seen in the bucket list. Usage mark_seen <index>"""
 
         try:
             index = int(arg)
@@ -144,7 +147,7 @@ class CLI(UserInterface, Cmd):
         print(f"Marked {media['title']} ({media['imdb_id']}) as seen.")
 
     def do_unmark_seen(self, arg) -> None:
-        """Mark a movie as unseen in the bucket list"""
+        """Mark a movie as unseen in the bucket list. Usage unmark_seen <index>"""
 
         try:
             index = int(arg)
@@ -163,15 +166,36 @@ class CLI(UserInterface, Cmd):
         self.bucket_list.update(index - 1, {"seen": False})
         print(f"Marked {media['title']} ({media['imdb_id']}) as unseen.")
 
+    def do_sort(self, arg) -> None:
+        """Sort the bucket list by field. Valid fields are 'title', 'imdb_id', and 'seen'. Usage sort <field> <order>"""
+
+        if arg == "":
+            print("Invalid input.")
+            return
+
+        arguments = arg.split()
+
+        if len(arguments) != 2:
+            print("Invalid input.")
+            return
+
+        field, order = arguments
+
+        if order not in ["asc", "desc"]:
+            print("Invalid order. Must be either 'asc' or 'desc'.")
+            return
+
+        sorted_bucket_list = self.bucket_list.sort_copy(field, order)
+        self.print_bucket_list(sorted_bucket_list)
+
     def do_save(self, arg) -> None:
-        """Save the bucket list to disk."""
+        """Save the bucket list to disk. Usage save"""
 
         print("Saving bucket list...")
         self.bucket_list.save()
         print("Bucket list saved.")
 
     def do_quit(self, arg) -> bool:
-        """Quit the program."""
+        """Quit the program. Usage quit"""
 
-        print("Quitting...")
         return True
