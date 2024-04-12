@@ -176,7 +176,7 @@ class CLI(UserInterface, Cmd):
         arguments = arg.split()
 
         if len(arguments) != 2:
-            print("Invalid input.")
+            print("Invalid arguments. Use 'help sort' for more info.")
             return
 
         field, order = arguments
@@ -188,14 +188,42 @@ class CLI(UserInterface, Cmd):
         sorted_bucket_list = self.bucket_list.sort_copy(field, order)
         self.print_bucket_list(sorted_bucket_list)
 
-    def do_save(self, arg) -> None:
+    def do_filter(self, arg) -> None:
+        """Filter the bucket list by field and value. Valid fields are 'title', 'imdb_id', and 'seen'. Usage sort <field> <value>"""
+
+        if arg == "":
+            print("Invalid input.")
+            return
+
+        arguments = arg.split()
+
+        if len(arguments) != 2:
+            print("Invalid arguments. Use 'help filter' for more info.")
+            return
+
+        field, value = arguments
+
+        media = list(
+            filter(
+                lambda medium: value.lower() in str(medium.get(field)).lower(),
+                self.bucket_list.view(),
+            )
+        )
+
+        if not media:
+            print("No results...")
+            return
+
+        self.print_bucket_list(media)
+
+    def do_save(self, _) -> None:
         """Save the bucket list to disk. Usage save"""
 
         print("Saving bucket list...")
         self.bucket_list.save()
         print("Bucket list saved.")
 
-    def do_quit(self, arg) -> bool:
+    def do_quit(self, _) -> bool:
         """Quit the program. Usage quit"""
 
         return True
