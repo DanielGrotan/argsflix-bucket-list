@@ -19,14 +19,14 @@ class CLI(UserInterface, Cmd):
         for i, movie in enumerate(bucket_list, 1):
             print(f"{i}. {movie['title']} ({movie['imdb_id']}) - Seen: {movie['seen']}")
 
-    def postcmd(self, stop: bool, line) -> bool:
+    def postcmd(self, stop: bool, _) -> bool:
         print()
         return stop
 
     def run(self) -> None:
         self.cmdloop()
 
-    def do_clear(self, arg: str) -> None:
+    def do_clear(self, _) -> None:
         """Clear the screen. Usage clear"""
 
         print("\033c", end="")
@@ -40,7 +40,8 @@ class CLI(UserInterface, Cmd):
         if result.success and result.search is not None:
             self.previous_results = result.search
 
-            self.print_bucket_list(self.bucket_list.view())
+            for i, media in enumerate(result.search, 1):
+                print(f"{i}. {media.title} - {media.type} ({media.imdb_id})")
 
             return
 
@@ -74,7 +75,7 @@ class CLI(UserInterface, Cmd):
 
         print(result.error)
 
-    def do_add(self, arg) -> None:
+    def do_add(self, arg: str) -> None:
         """Add a movie from the search results to the bucket list. Usage add <index>"""
 
         try:
@@ -100,13 +101,13 @@ class CLI(UserInterface, Cmd):
             f"Added {result.title} ({result.year}) - {result.imdb_id} to bucket list."
         )
 
-    def do_list(self, arg) -> None:
+    def do_list(self, _) -> None:
         """List all movies in the bucket list. Usage list"""
 
         for i, movie in enumerate(self.bucket_list.view(), 1):
             print(f"{i}. {movie['title']} ({movie['imdb_id']}) - Seen: {movie['seen']}")
 
-    def do_remove(self, arg) -> None:
+    def do_remove(self, arg: str) -> None:
         """Remove a movie from the bucket list. Usage remove <index>"""
 
         try:
@@ -126,7 +127,7 @@ class CLI(UserInterface, Cmd):
         self.bucket_list.remove(index - 1)
         print(f"Removed {media['title']} ({media['imdb_id']}) from bucket list.")
 
-    def do_mark_seen(self, arg) -> None:
+    def do_mark_seen(self, arg: str) -> None:
         """Mark a movie as seen in the bucket list. Usage mark_seen <index>"""
 
         try:
@@ -146,7 +147,7 @@ class CLI(UserInterface, Cmd):
         self.bucket_list.update(index - 1, {"seen": True})
         print(f"Marked {media['title']} ({media['imdb_id']}) as seen.")
 
-    def do_unmark_seen(self, arg) -> None:
+    def do_unmark_seen(self, arg: str) -> None:
         """Mark a movie as unseen in the bucket list. Usage unmark_seen <index>"""
 
         try:
@@ -166,7 +167,7 @@ class CLI(UserInterface, Cmd):
         self.bucket_list.update(index - 1, {"seen": False})
         print(f"Marked {media['title']} ({media['imdb_id']}) as unseen.")
 
-    def do_sort(self, arg) -> None:
+    def do_sort(self, arg: str) -> None:
         """Sort the bucket list by field. Valid fields are 'title', 'imdb_id', and 'seen'. Usage sort <field> <order>"""
 
         if arg == "":
@@ -188,7 +189,7 @@ class CLI(UserInterface, Cmd):
         sorted_bucket_list = self.bucket_list.sort_copy(field, order)
         self.print_bucket_list(sorted_bucket_list)
 
-    def do_filter(self, arg) -> None:
+    def do_filter(self, arg: str) -> None:
         """Filter the bucket list by field and value. Valid fields are 'title', 'imdb_id', and 'seen'. Usage sort <field> <value>"""
 
         if arg == "":

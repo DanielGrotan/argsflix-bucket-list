@@ -48,4 +48,4 @@ class BucketList:
         """Save the bucket list to disk."""
 
         with open(self.file_path, "w") as file:
-            json.dump(self.bucket_list, file)
+            json.dump(self.bucket_list, file, separators=(",", ":"))
