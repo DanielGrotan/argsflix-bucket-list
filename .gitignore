@@ -1,3 +1,4 @@
 __pycache__/
 bucket_list.json
 .venv/
+.pytest_cache/
