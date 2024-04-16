@@ -3,10 +3,7 @@ import os
 from api import OmdbAPI
 from bucket_list import BucketList
 from user_interface import CLI
-
-
-def get_absolute_path(relative_path: str) -> str:
-    return os.path.join(os.path.dirname(__file__), relative_path)
+from utils import get_absolute_path
 
 
 def main() -> None:

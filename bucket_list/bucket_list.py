@@ -1,12 +1,16 @@
+import copy
 import json
 import os
-from typing import Literal
+
+from api.models import Media
+
+from .stored_media import StoredMedia
 
 
 class BucketList:
     def __init__(self, file_path: str) -> None:
         self.file_path = file_path
-        self.bucket_list = []
+        self.bucket_list: list[StoredMedia] = []
 
         if os.path.exists(file_path):
             self.load()
@@ -15,37 +19,56 @@ class BucketList:
         """Load the bucket list from disk."""
 
         with open(self.file_path, "r") as file:
-            self.bucket_list = json.load(file)
+            self.bucket_list = list(
+                map(lambda values: StoredMedia(**values), json.load(file))
+            )
 
-    def add(self, item: dict) -> None:
+    def add(self, media: Media) -> None:
         """Add an item to the bucket list."""
 
-        self.bucket_list.append(item)
+        self.bucket_list.append(StoredMedia(**media.model_dump()))
 
-    def view(self) -> list[dict]:
+    def view(self) -> list[StoredMedia]:
         """Return a list of all items in the bucket list."""
 
-        return self.bucket_list.copy()
+        return copy.deepcopy(self.bucket_list)
 
     def remove(self, index: int) -> None:
         """Remove an item from the bucket list."""
 
         self.bucket_list.pop(index)
 
-    def update(self, index: int, values: dict) -> None:
-        """Update an item in the bucket list."""
+    def mark_seen(self, index: int) -> None:
+        self.bucket_list[index].seen = True
 
-        self.bucket_list[index].update(values)
+    def mark_unseen(self, index: int) -> None:
+        self.bucket_list[index].seen = False
 
-    def sort_copy(self, field: str, order: Literal["asc", "desc"]) -> list[dict]:
+    def sort(self, field: str, order: str) -> list[StoredMedia]:
         """Sort the bucket list by field."""
 
         return sorted(
-            self.bucket_list, key=lambda x: x.get(field) or 0, reverse=order == "desc"
+            self.bucket_list,
+            key=lambda media: getattr(media, field, 0),
+            reverse=order == "desc",
+        )
+
+    def filter(self, field: str, value: str) -> list[StoredMedia]:
+        """Filter the bucket list by field and value"""
+
+        return list(
+            filter(
+                lambda media: value.lower() in str(getattr(media, field, "")).lower(),
+                self.bucket_list,
+            )
         )
 
     def save(self) -> None:
         """Save the bucket list to disk."""
 
         with open(self.file_path, "w") as file:
-            json.dump(self.bucket_list, file, separators=(",", ":"))
+            json.dump(
+                list(map(StoredMedia.model_dump, self.bucket_list)),
+                file,
+                separators=(",", ":"),
+            )

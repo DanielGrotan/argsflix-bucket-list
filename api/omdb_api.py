@@ -1,10 +1,12 @@
 import copy
-import io
 
 import requests
-from PIL import Image
 
-from .api_response import DetailedSearchResult, SearchResult
+from .models import Media
+from .models.detailed import DetailedGame, DetailedMedia, DetailedMovie, DetailedSeries
+
+SearchResult = list[Media] | None
+DetailedSearchResult = DetailedMedia | None
 
 
 class OmdbAPI:
@@ -20,15 +22,21 @@ class OmdbAPI:
 
     def search(self, query: str) -> SearchResult:
         if query in self.search_cache:
-            return self.search_cache[query].model_copy()
+            return copy.deepcopy(self.search_cache[query])
 
         url = self._create_url({"s": query})
         response = requests.get(url)
 
-        search_result = SearchResult(**response.json())
-        self.search_cache[query] = search_result.model_copy()
+        data = response.json()
 
-        return search_result
+        if data.get("Response") != "True":
+            self.search_cache[query] = None
+            return None
+
+        medias = list(map(lambda values: Media(**values), data.get("Search") or []))
+        self.search_cache[query] = medias
+
+        return copy.deepcopy(medias)
 
     def get_details(self, imdb_id: str) -> DetailedSearchResult:
         if imdb_id in self.details_cache:
@@ -37,8 +45,22 @@ class OmdbAPI:
         url = self._create_url({"i": imdb_id})
         response = requests.get(url)
 
-        details = DetailedSearchResult(response.json())
+        data = response.json()
 
-        self.details_cache[imdb_id] = copy.deepcopy(details)
+        if data.get("Response") != "True":
+            self.details_cache[imdb_id] = None
+            return None
 
-        return details
+        match data.get("Type"):
+            case "movie":
+                detailed_media = DetailedMovie(**data)
+            case "series":
+                detailed_media = DetailedSeries(**data)
+            case "game":
+                detailed_media = DetailedGame(**data)
+            case _:
+                detailed_media = None
+
+        self.details_cache[imdb_id] = detailed_media
+
+        return copy.deepcopy(detailed_media)

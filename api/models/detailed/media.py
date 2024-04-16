@@ -1,13 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from ..media import Media
 from .rating import Rating
 
 
-class DetailedVisualMedia(BaseModel):
-    title: str = Field(alias="Title")
-    year: str = Field(alias="Year")
-    poster: str = Field(alias="Poster")
-    type: str = Field(alias="Type")
+class DetailedMedia(Media):
     rated: str = Field(alias="Rated")
     released: str = Field(alias="Released")
     runtime: str = Field(alias="Runtime")
@@ -23,3 +20,9 @@ class DetailedVisualMedia(BaseModel):
     metascore: str = Field(alias="Metascore")
     imdb_rating: str = Field(alias="imdbRating")
     imdb_votes: str = Field(alias="imdbVotes")
+
+    def __str__(self) -> str:
+        return "\n".join(
+            f"{field.capitalize()}: {getattr(self, field)}"
+            for field in self.model_fields
+        )

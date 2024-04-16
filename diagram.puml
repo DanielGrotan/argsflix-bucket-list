@@ -2,81 +2,41 @@
 
 skinparam linetype ortho
 
-class OmdbAPI {
-    -api_key: str
-    --
-    +search(query: str) -> SearchResult
-    +get_details(imdb_id: str) -> SearchResult
+package Backend {
+    class OmdbApi {
+        -api_key: str
+        --
+        +search(query: str) -> list[Media] | None
+        +get_details(imdb_id: str) -> DetailedMedia | None
+    }
+
+    class BucketList {
+        -file_path: str
+        -medias: list[Media]
+        --
+        +add(media: Media)
+        +remove(index: int)
+        +mark_seen(index: int)
+        +mark_unseen(index: int)
+        +view() -> list[Media]
+        +sort(field: str, order: str) -> list[Media]
+        +filter(field: str, value: str) -> list[Media]
+        +save()
+    }
 }
 
-class ApiResponse {
-    +success: bool
-    +data: Any | None
-    +error: str | None
-}
+package Frontend {
+    class UserInterface {
+        -api: OmdbApi
+        -bucket_list: BucketList
+        --
+        +run()
+    }
 
-class SearchResult extends ApiResponse {
-    +data: list[VisualMedia] | None
-}
+    class CLI extends UserInterface
 
-class DetailedSearchResult extends ApiResponse {
-    +data: DetailedVisualMedia | None
-}
-
-class UserInterface {
-    -api: OmdbAPI
-    --
-    +run()
-}
-
-class CLI extends UserInterface {}
-
-class GUI extends UserInterface {}
-
-class VisualMedia {
-    +title: str
-    +year: str
-    +imdb_id: str
-    +poster: str
-    +type: str
-}
-
-class DetailedVisualMedia {
-    +title: str
-    +year: str
-    +poster: str
-    +type: str
-    +rated: str
-    +released: str
-    +runtime: str
-    +genre: str
-    +director: str
-    +writer: str
-    +actors: str
-    +plot: str
-    +language: str
-    +country: str
-    +awards: str
-    +ratings: list[Rating]
-    +metascore: str
-    +imdb_rating: str
-    +imdb_votes: str
-}
-
-class DetailedMovie extends DetailedVisualMedia {
-    +dvd: str
-    +box_office: str
-    +production: str
-    +website: str
-}
-
-class DetailedSeries extends DetailedVisualMedia {
-    +total_seasons: str
-}
-
-class Rating {
-    source: str
-    value: str
+    UserInterface *-- OmdbApi
+    UserInterface *-- BucketList
 }
 
 @enduml

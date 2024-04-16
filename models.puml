@@ -1,0 +1,50 @@
+@startuml models
+
+skinparam Linetype ortho
+
+class Media {
+    +title: str
+    +year: int
+    +imdb_id: str
+    +type: str
+    +poster: str
+}
+
+class DetailedMedia extends Media {
+    +rated: str
+    +released: str
+    +runtime: str
+    +genre: str
+    +director: str
+    +writer: str
+    +actors: str
+    +plot: str
+    +language: str
+    +country: str
+    +awards: str
+    +ratings: list[Rating]
+    +metascore: str
+    +imdb_rating: str
+    +imdb_votes: str
+}
+
+class DetailedMovie extends DetailedMedia {
+    +dvd: str
+    +box_office: str
+    +production: str
+    +website: str
+}
+
+
+class DetailedSeries extends DetailedMedia {
+    +total_seasons: str
+}
+
+class DetailedGame extends DetailedMedia {
+    +dvd: str
+    +box_office: str
+    +production: str
+    +website: str
+}
+
+@enduml
